@@ -1,6 +1,9 @@
-package co.eci.blacklist.domain;
+package java.co.eci.blacklist.domain;
 
-import co.eci.blacklist.infrastructure.HostBlackListsDataSourceFacade;
+import main.java.co.eci.blacklist.domain.BlacklistChecker;
+import main.java.co.eci.blacklist.domain.MatchResult;
+import main.java.co.eci.blacklist.domain.Policies;
+import main.java.co.eci.blacklist.infrastructure.HostBlackListsDataSourceFacade;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

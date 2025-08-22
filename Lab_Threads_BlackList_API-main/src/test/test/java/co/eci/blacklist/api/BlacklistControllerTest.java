@@ -1,6 +1,6 @@
-package co.eci.blacklist.api;
+package java.co.eci.blacklist.api;
 
-import co.eci.blacklist.BlacklistApiApplication;
+import main.java.co.eci.blacklist.BlacklistApiApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
