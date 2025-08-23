@@ -128,7 +128,7 @@ Se ejecuta la validación de IP dispersa (`202.24.34.55`) con diferentes configu
 
 Con los datos recolectados, obtuvimos los siguientes grafica:
 
-![](img/resultados.jpg)
+![](img/Resultados.jpg)
 
 
 ## 📊 Tabla de Resultados
