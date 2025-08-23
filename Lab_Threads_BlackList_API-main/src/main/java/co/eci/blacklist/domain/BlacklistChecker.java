@@ -1,6 +1,7 @@
 package co.eci.blacklist.domain;
 
 import co.eci.blacklist.infrastructure.HostBlackListsDataSourceFacade;
+import co.eci.blacklist.labs.part2.ThreadLifecycle;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,51 +30,48 @@ public class BlacklistChecker {
         int total = facade.getRegisteredServersCount();
 
         long start = System.currentTimeMillis();
-        AtomicInteger found = new AtomicInteger(0);
-        AtomicInteger checked = new AtomicInteger(0);
-        AtomicBoolean stop = new AtomicBoolean(false);
         List<Integer> matches = Collections.synchronizedList(new ArrayList<>());
 
+         // Diviidmos en segmentos
         int threads = Math.max(1, nThreads);
-        int chunk = Math.max(1, total / threads);
+        int chunk =  total / threads;
 
-        List<Future<?>> futures = new ArrayList<>(threads);
-        try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
-            for (int i = 0; i < threads; i++) {
-                final int startIdx = i * chunk;
-                final int endIdx = (i == threads - 1) ? total : Math.min(total, (i + 1) * chunk);
-                futures.add(exec.submit(() -> {
-                    for (int s = startIdx; s < endIdx && !stop.get(); s++) {
-                        // short-circuit if another thread already reached threshold
-                        if (stop.get()) break;
-                        if (facade.isInBlackListServer(s, ip)) {
-                            matches.add(s);
-                            if (found.incrementAndGet() >= threshold) {
-                                stop.set(true);
-                                // do not break immediately: allow checked counter to reflect this check
-                            }
-                        }
-                        checked.incrementAndGet();
-                    }
-                }));
-            }
-            // wait
-            for (Future<?> f : futures) {
-                f.get();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Error during blacklist checking", e);
+        ThreadLifecycle[] workers = new ThreadLifecycle[threads];
+        for (int i = 0; i < threads;i++){
+            int startIndex = i * chunk;
+            //Aqui manejamos el caso cuando N no divide exacto
+            int endIndex = (i == threads - 1) ? total : (i+1) * chunk;
+            // Creamos N hilos
+            workers[i] = new ThreadLifecycle(startIndex, endIndex, ip);
+            //Ejecutamos con start
+            workers[i].start();
         }
 
-        boolean trustworthy = found.get() < threshold;
-        // Keep original lab-style log line about coverage
-        logger.info("Checked blacklists: " + checked.get() + " of " + total);
-        if (trustworthy) {
+        for (ThreadLifecycle worker : workers){
+            try {
+                //Esperamos con Join
+                worker.join();
+                matches.addAll(worker.getOcurrences());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        //Sumamos los resultados
+        int found = matches.size();
+        int checked = total;
+
+        //Verficiamos coincidencias >= 5
+        boolean trustworthy = found < threshold;
+
+        logger.info("Checked blacklists :" + checked + " of " + total);
+        if (trustworthy){
             facade.reportAsTrustworthy(ip);
         } else {
             facade.reportAsNotTrustworthy(ip);
         }
+
         long elapsed = System.currentTimeMillis() - start;
-        return new MatchResult(ip, trustworthy, List.copyOf(matches), checked.get(), total, elapsed, threads);
+        return new MatchResult(ip,trustworthy, List.copyOf(matches),checked,total, elapsed,threads);
     }
+
 }
