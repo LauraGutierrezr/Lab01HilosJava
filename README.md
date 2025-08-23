@@ -146,7 +146,7 @@ Con los datos recolectados, obtuvimos los siguientes grafica:
 
 1) Según la Ley de Amdahl, ¿por qué el mejor desempeño no se logra con cientos de hilos (p. ej. 500)?
 
-![alt text](Lab_Threads_BlackList_API-main/img/ahmdahls.png)
+![alt text](img/ahmdahls.png)
 
 Porque la Ley de Amdahl limita la ganancia siempre hay una fracción secuencial que no se puede paralelizar. Con demasiados hilos aparecen sobrecargas de coordinación, consumo de memoria que reducen el beneficio
 
